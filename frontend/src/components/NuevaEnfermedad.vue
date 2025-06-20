@@ -12,7 +12,7 @@
         </div>
 
         <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }} (ID: {{ paciente.id }})</p>
+            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
 
             <div v-for="(s, i) in sintomasSeleccionados" :key="i">
                 <label>Síntoma {{ i + 1 }}:</label>

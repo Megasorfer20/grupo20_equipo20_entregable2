@@ -140,6 +140,34 @@ class API:
         except Exception as e:
             session.rollback()
             return f"Error al registrar la enfermedad: {str(e)}"
+        
+    def obtener_enfermedades_paciente(self, paciente_id):
+        relaciones = session.query(PacientesEnfermedades).filter_by(paciente_id=paciente_id).all()
+        return [{
+            "id": r.id,
+            "nombre": r.enfermedad_rel.enfermedad if r.enfermedad_rel else None,
+            "sintomas": r.sintomas,
+            "fecha_registro": r.fecha_registro.isoformat()
+        } for r in relaciones]
+
+    def obtener_alergias_paciente(self, paciente_id):
+        alergias = session.query(Alergias).filter_by(paciente_id=paciente_id).all()
+        return [{
+            "id": a.id,
+            "alergeno": a.alergeno,
+            "sintomas": a.sintomas,
+            "fecha_registro": a.fecha_registro.isoformat()
+        } for a in alergias]
+
+    def obtener_tratamientos_paciente(self, paciente_id):
+        tratamientos = session.query(Tratamientos).filter_by(paciente_id=paciente_id).all()
+        return [{
+            "id": t.id,
+            "medicamentos": t.medicamentos,
+            "dosis_medicamentos": t.dosis_medicamentos,
+            "fecha_registro": t.fecha_registro.isoformat()
+        } for t in tratamientos]
+
 
         
     

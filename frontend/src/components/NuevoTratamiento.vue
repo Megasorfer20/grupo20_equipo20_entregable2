@@ -12,7 +12,7 @@
         </div>
 
         <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }} (ID: {{ paciente.id }})</p>
+            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
 
             <label for="cantidad">Número de medicamentos:</label>
             <input type="number" v-model.number="cantidad" min="1" id="cantidad" />
@@ -83,8 +83,8 @@ const enviarTratamiento = async () => {
 
     const datos = {
         paciente_id: paciente.value.id,
-        medicamentos: medicamentos.value.map((m) => m.nombre).join(', '),
-        dosis_medicamentos: medicamentos.value.map((m) => m.dosis).join(', '),
+        medicamentos: medicamentos.value.map((m) => m.nombre),
+        dosis_medicamentos: medicamentos.value.map((m) => m.dosis),
         fecha_registro: new Date().toISOString().split('T')[0]
     }
 

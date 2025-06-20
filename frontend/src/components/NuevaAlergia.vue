@@ -12,7 +12,7 @@
         </div>
 
         <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }} (ID: {{ paciente.id }})</p>
+            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
 
             <div>
                 <label>Alergeno:</label>
@@ -91,10 +91,15 @@ const enviarAlergia = async () => {
         return
     }
 
+    const sintomasNombres = sintomasSeleccionados.value.map((id) => {
+        const sintomaObj = listaSintomas.value.find((s) => s.id === id)
+        return sintomaObj ? sintomaObj.sintoma : ''
+    })
+
     const datos = {
         paciente_id: paciente.value.id,
         alergeno: alergia.value.alergeno.trim(),
-        sintomas: sintomasSeleccionados.value,
+        sintomas: sintomasNombres,
         fecha_registro: new Date().toISOString().split('T')[0]
     }
 

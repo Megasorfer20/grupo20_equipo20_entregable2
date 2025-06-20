@@ -72,8 +72,8 @@ class Tratamientos(Base):
 
     id = Column(Integer, primary_key=True)
     paciente_id = Column(Integer, ForeignKey('pacientes.id'))
-    medicamentos = Column(String)
-    dosis_medicamentos = Column(String)
+    medicamentos = Column(JSONEncodedList)
+    dosis_medicamentos = Column(JSONEncodedList)
     fecha_registro = Column(Date)
     
     paciente = relationship("Pacientes", back_populates="tratamientos")
