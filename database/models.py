@@ -53,7 +53,7 @@ class PacientesEnfermedades(Base):
 
     id = Column(Integer, primary_key=True)
     paciente_id = Column(Integer, ForeignKey('pacientes.id'))
-    enfermedad_id = Column(Integer, ForeignKey('enfermedades.id'))
+    enfermedad_id = Column(Integer, ForeignKey('enfermedades.id'), nullable=True)
     sintomas = Column(JSONEncodedList)
     fecha_registro = Column(Date)
     

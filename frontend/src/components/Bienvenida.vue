@@ -4,9 +4,9 @@
         <h3>¿Qué deseas hacer?</h3>
 
         <div>
-            <button>Añadir paciente</button>
-            <button>Actualizar paciente</button>
-            <button>Añadir paciente</button>
+            <button @click="$emit('nuevoPacienteRoute')">Añadir paciente</button>
+            <button @click="$emit('editarPacienteRoute')">Actualizar paciente</button>
+            <button @click="$emit('consultarPacienteRoute')">Consultar paciente</button>
         </div>
     </section>
 </template>
