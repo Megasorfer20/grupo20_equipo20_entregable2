@@ -5,14 +5,14 @@
         <h1>Añadir alergia</h1>
         <h3>Rellena por favor todos los campos</h3>
 
-        <div>
+        <div v-if="!pacienteStore.paciente">
             <label>Documento o nombre del paciente:</label>
             <input v-model="busqueda" />
             <button @click="buscarPaciente">Buscar</button>
         </div>
 
-        <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
+        <div v-if="pacienteStore.paciente">
+            <p><strong>Paciente:</strong> {{ pacienteStore.paciente.nombre_completo }}</p>
 
             <div>
                 <label>Alergeno:</label>
@@ -44,16 +44,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { pacienteStore } from '@/stores/pacienteStore'
 
 const emit = defineEmits(['volver'])
 
 const busqueda = ref('')
-const paciente = ref(null)
-const pacienteEncontrado = ref(false)
-
 const listaSintomas = ref([])
-const sintomasSeleccionados = ref([])
 const cantidadSintomas = ref(0)
+const sintomasSeleccionados = ref([])
 
 const alergia = ref({
     alergeno: ''
@@ -73,8 +71,8 @@ const buscarPaciente = async () => {
         return
     }
 
-    paciente.value = resultado
-    pacienteEncontrado.value = true
+    pacienteStore.paciente = resultado
+    pacienteStore.alergias = await window.pywebview.api.obtener_alergias_paciente(resultado.id)
 }
 
 const generarSelects = () => {
@@ -97,7 +95,7 @@ const enviarAlergia = async () => {
     })
 
     const datos = {
-        paciente_id: paciente.value.id,
+        paciente_id: pacienteStore.paciente.id,
         alergeno: alergia.value.alergeno.trim(),
         sintomas: sintomasNombres,
         fecha_registro: new Date().toISOString().split('T')[0]
@@ -105,14 +103,16 @@ const enviarAlergia = async () => {
 
     await window.pywebview?.ready
     const respuesta = await window.pywebview.api.add_alergia(datos)
+
+    pacienteStore.alergias = await window.pywebview.api.obtener_alergias_paciente(pacienteStore.paciente.id)
+
     alert(respuesta)
     emit('volver')
 }
 
 onMounted(async () => {
     await window.pywebview?.ready
-    const respuesta = await window.pywebview.api.obtener_sintomas()
-    listaSintomas.value = respuesta
+    listaSintomas.value = await window.pywebview.api.obtener_sintomas()
 })
 </script>
 

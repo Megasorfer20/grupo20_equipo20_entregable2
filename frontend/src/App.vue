@@ -22,6 +22,7 @@ import ConsultarPaciente from '@/components/ConsultarPaciente.vue'
 import NuevaEnfermedad from '@/components/NuevaEnfermedad.vue'
 import NuevaAlergia from '@/components/NuevaAlergia.vue'
 import NuevoTratamiento from '@/components/NuevoTratamiento.vue'
+import { pacienteStore } from '@/stores/pacienteStore'
 
 import { ref } from 'vue'
 
@@ -29,6 +30,13 @@ const panels = ref([true, false, false, false, false, false, false])
 
 const togglePanel = (openPanel) => {
     panels.value = panels.value.map((_, index) => index === openPanel)
+
+    if (openPanel === 0) {
+        pacienteStore.paciente = null
+        pacienteStore.enfermedades = []
+        pacienteStore.alergias = []
+        pacienteStore.tratamientos = []
+    }
 }
 </script>
 

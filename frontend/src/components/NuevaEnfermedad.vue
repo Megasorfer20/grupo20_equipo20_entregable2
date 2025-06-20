@@ -5,14 +5,14 @@
         <h1>Añadir enfermedad</h1>
         <h3>Rellena por favor todos los campos</h3>
 
-        <div>
+        <div v-if="!pacienteStore.paciente">
             <label>Documento o nombre del paciente:</label>
             <input v-model="busqueda" />
             <button @click="buscarPaciente">Buscar</button>
         </div>
 
-        <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
+        <div v-if="pacienteStore.paciente">
+            <p><strong>Paciente:</strong> {{ pacienteStore.paciente.nombre_completo }}</p>
 
             <div v-for="(s, i) in sintomasSeleccionados" :key="i">
                 <label>Síntoma {{ i + 1 }}:</label>
@@ -31,13 +31,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { pacienteStore } from '@/stores/pacienteStore'
 
 const emit = defineEmits(['volver'])
 
 const busqueda = ref('')
-const paciente = ref(null)
-const pacienteEncontrado = ref(false)
-
 const listaSintomas = ref([])
 const sintomasSeleccionados = ref(['', '', ''])
 
@@ -55,24 +53,33 @@ const buscarPaciente = async () => {
         return
     }
 
-    paciente.value = resultado
-    pacienteEncontrado.value = true
+    pacienteStore.paciente = resultado
+    pacienteStore.enfermedades = await window.pywebview.api.obtener_enfermedades_paciente(resultado.id)
 }
 
 const enviarEnfermedad = async () => {
+    if (!pacienteStore.paciente) {
+        alert('No hay paciente cargado.')
+        return
+    }
+
     if (sintomasSeleccionados.value.some((s) => s === '')) {
         alert('Todos los síntomas deben ser seleccionados.')
         return
     }
 
     const datos = {
-        paciente_id: paciente.value.id,
+        paciente_id: pacienteStore.paciente.id,
         sintomas: sintomasSeleccionados.value,
         fecha_registro: new Date().toISOString().split('T')[0]
     }
 
     await window.pywebview?.ready
     const respuesta = await window.pywebview.api.registrar_enfermedad_paciente(datos)
+
+    // Actualizar enfermedades del store
+    pacienteStore.enfermedades = await window.pywebview.api.obtener_enfermedades_paciente(pacienteStore.paciente.id)
+
     alert(respuesta)
     emit('volver')
 }

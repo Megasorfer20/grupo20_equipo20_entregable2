@@ -5,14 +5,14 @@
         <h1>Añadir tratamiento</h1>
         <h3>Rellena por favor todos los campos</h3>
 
-        <div class="p-4">
+        <div v-if="!pacienteStore.paciente" class="p-4">
             <label for="busqueda">Documento o nombre del paciente:</label>
             <input v-model="busqueda" id="busqueda" />
             <button @click="buscarPaciente">Buscar</button>
         </div>
 
-        <div v-if="pacienteEncontrado">
-            <p><strong>Paciente:</strong> {{ paciente.nombre_completo }}</p>
+        <div v-if="pacienteStore.paciente">
+            <p><strong>Paciente:</strong> {{ pacienteStore.paciente.nombre_completo }}</p>
 
             <label for="cantidad">Número de medicamentos:</label>
             <input type="number" v-model.number="cantidad" min="1" id="cantidad" />
@@ -36,12 +36,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { pacienteStore } from '@/stores/pacienteStore'
 
 const emit = defineEmits(['volver'])
-
 const busqueda = ref('')
-const paciente = ref(null)
-const pacienteEncontrado = ref(false)
 
 const cantidad = ref(0)
 const medicamentos = ref([])
@@ -60,8 +58,10 @@ const buscarPaciente = async () => {
         return
     }
 
-    paciente.value = resultado
-    pacienteEncontrado.value = true
+    pacienteStore.paciente = resultado
+    pacienteStore.enfermedades = await window.pywebview.api.obtener_enfermedades_paciente(resultado.id)
+    pacienteStore.alergias = await window.pywebview.api.obtener_alergias_paciente(resultado.id)
+    pacienteStore.tratamientos = await window.pywebview.api.obtener_tratamientos_paciente(resultado.id)
 }
 
 const generarInputs = () => {
@@ -76,13 +76,18 @@ const generarInputs = () => {
 }
 
 const enviarTratamiento = async () => {
+    if (!pacienteStore.paciente) {
+        alert('No hay paciente cargado.')
+        return
+    }
+
     if (medicamentos.value.some((m) => m.nombre.trim() === '' || m.dosis.trim() === '')) {
         alert('Todos los campos son obligatorios')
         return
     }
 
     const datos = {
-        paciente_id: paciente.value.id,
+        paciente_id: pacienteStore.paciente.id,
         medicamentos: medicamentos.value.map((m) => m.nombre),
         dosis_medicamentos: medicamentos.value.map((m) => m.dosis),
         fecha_registro: new Date().toISOString().split('T')[0]
@@ -90,6 +95,9 @@ const enviarTratamiento = async () => {
 
     await window.pywebview?.ready
     const respuesta = await window.pywebview.api.add_tratamiento(datos)
+
+    // Actualiza el store con los nuevos tratamientos
+    pacienteStore.tratamientos = await window.pywebview.api.obtener_tratamientos_paciente(pacienteStore.paciente.id)
 
     alert(respuesta)
     emit('volver')

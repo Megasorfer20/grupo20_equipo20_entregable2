@@ -2,7 +2,7 @@
     <section>
         <button @click="$emit('volver')">Volver</button>
 
-        <div v-if="!pacienteEncontrado">
+        <div v-if="!pacienteStore.paciente">
             <h1>Consultar datos del paciente</h1>
             <input v-model="busqueda" placeholder="Nombre o documento" />
             <button @click="buscarPaciente">Buscar</button>
@@ -10,12 +10,12 @@
 
         <div v-else>
             <h1>Información del paciente</h1>
-            <p><strong>Nombre:</strong> {{ paciente.nombre_completo }}</p>
-            <p><strong>Fecha nacimiento:</strong> {{ paciente.fecha_nacimiento }}</p>
-            <p><strong>Género:</strong> {{ paciente.genero }}</p>
-            <p><strong>Identificación:</strong> {{ paciente.numero_identificacion }}</p>
-            <p><strong>Celular:</strong> {{ paciente.celular_contacto }}</p>
-            <p><strong>Fecha de registro:</strong> {{ paciente.fecha_registro }}</p>
+            <p><strong>Nombre:</strong> {{ pacienteStore.paciente.nombre_completo }}</p>
+            <p><strong>Fecha nacimiento:</strong> {{ pacienteStore.paciente.fecha_nacimiento }}</p>
+            <p><strong>Género:</strong> {{ pacienteStore.paciente.genero }}</p>
+            <p><strong>Identificación:</strong> {{ pacienteStore.paciente.numero_identificacion }}</p>
+            <p><strong>Celular:</strong> {{ pacienteStore.paciente.celular_contacto }}</p>
+            <p><strong>Fecha de registro:</strong> {{ pacienteStore.paciente.fecha_registro }}</p>
 
             <h3>Más información del paciente</h3>
             <div>
@@ -42,7 +42,7 @@
                         <th>Síntomas</th>
                         <th>Fecha</th>
                     </tr>
-                    <tr v-for="e in enfermedades" :key="e.id">
+                    <tr v-for="e in pacienteStore.enfermedades" :key="e.id">
                         <td>{{ e.nombre || 'Enfermedad no especificada' }}</td>
                         <td>{{ e.sintomas.join(', ') }}</td>
                         <td>{{ e.fecha_registro }}</td>
@@ -61,7 +61,7 @@
                         <th>Síntomas</th>
                         <th>Fecha</th>
                     </tr>
-                    <tr v-for="a in alergias" :key="a.id">
+                    <tr v-for="a in pacienteStore.alergias" :key="a.id">
                         <td>{{ a.alergeno }}</td>
                         <td>{{ a.sintomas.join(', ') }}</td>
                         <td>{{ a.fecha_registro }}</td>
@@ -74,7 +74,6 @@
         <div v-if="modal === 'tratamientos'" class="modal">
             <div class="modal-content scrollable">
                 <h3>Tratamientos del paciente</h3>
-
                 <table>
                     <thead>
                         <tr>
@@ -84,7 +83,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template v-for="t in tratamientos" :key="t.id">
+                        <template v-for="t in pacienteStore.tratamientos" :key="t.id">
                             <tr v-for="(med, i) in t.medicamentos" :key="`${t.id}-${i}`">
                                 <td>{{ t.fecha_registro }}</td>
                                 <td>{{ med }}</td>
@@ -93,7 +92,6 @@
                         </template>
                     </tbody>
                 </table>
-
                 <button @click="cerrarModal">Cerrar</button>
             </div>
         </div>
@@ -102,15 +100,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { pacienteStore } from '@/stores/pacienteStore'
 
 const emit = defineEmits(['volver', 'nuevaEnfermedadRoute', 'nuevaAlergiaRoute', 'nuevTratamientoRoute'])
-
 const busqueda = ref('')
-const paciente = ref({})
-const pacienteEncontrado = ref(false)
-const enfermedades = ref([])
-const alergias = ref([])
-const tratamientos = ref([])
 const modal = ref(null)
 
 const buscarPaciente = async () => {
@@ -128,13 +121,11 @@ const buscarPaciente = async () => {
         return
     }
 
-    paciente.value = res
-    pacienteEncontrado.value = true
-
-    // Obtener detalles
-    enfermedades.value = await window.pywebview.api.obtener_enfermedades_paciente(res.id)
-    alergias.value = await window.pywebview.api.obtener_alergias_paciente(res.id)
-    tratamientos.value = await window.pywebview.api.obtener_tratamientos_paciente(res.id)
+    // Guardar en el store
+    pacienteStore.paciente = res
+    pacienteStore.enfermedades = await window.pywebview.api.obtener_enfermedades_paciente(res.id)
+    pacienteStore.alergias = await window.pywebview.api.obtener_alergias_paciente(res.id)
+    pacienteStore.tratamientos = await window.pywebview.api.obtener_tratamientos_paciente(res.id)
 }
 
 const mostrarModal = (tipo) => {
