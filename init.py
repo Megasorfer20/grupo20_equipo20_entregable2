@@ -173,23 +173,22 @@ class API:
     
 
 def main():
-    if hasattr(sys, '_MEIPASS'):
-        base_path = os.path.join(sys._MEIPASS, 'frontend')
-    else:
-        base_path = './frontend'
-    
-    html_path = os.path.join(base_path, 'index.html')
+    dist_dir = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
+    index_file = os.path.join(dist_dir, 'index.html')
+
+    if not os.path.exists(index_file):
+        raise FileNotFoundError("¡Asegúrate de haber ejecutado 'npm run build' en Vue!")
     
     api = API()
 
-    # webview.create_window('Gestor de pacientes', html_path, js_api=api)
-    webview.create_window("Dev", "http://localhost:5173", js_api=api)
+    webview.create_window('Gestor de pacientes', index_file, js_api=api)
+    # webview.create_window("Dev", "http://localhost:5173", js_api=api)
 
     try:
         create_database()
         
-        webview.start(debug=True, http_server=True)
-        # webview.start( http_server=True)
+        # webview.start(debug=True, http_server=True)
+        webview.start( http_server=True)
     finally:
         print("Cerrando la aplicación...")
         cerrar_db()

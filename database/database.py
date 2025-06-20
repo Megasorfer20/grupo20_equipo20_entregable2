@@ -7,7 +7,8 @@ from database.symptoms import symptoms, diseases
 DB_FILE = "pacientes.db"
 DB_URL = f"sqlite:///{DB_FILE}"
 
-engine = create_engine(DB_URL, echo=True)
+# engine = create_engine(DB_URL, echo=True)
+engine = create_engine(DB_URL, echo=False)
 
 SessionLocal = sessionmaker(bind=engine)
 

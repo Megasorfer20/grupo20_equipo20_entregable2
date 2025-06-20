@@ -26,7 +26,7 @@ El gestor de enfermedades es una aplicación para investigar que enfermedad tien
 1. **Desde el directorio dist:**
 
    - Abre el directorio **`/dist`**.
-   - Haz doble clic sobre el archivo **"Gestor Enfermedades.exe"**.
+   - Haz doble clic sobre el archivo **"Init.exe"**.
 
 ### Ejecución desde el código fuente
 
@@ -78,6 +78,11 @@ El gestor de enfermedades es una aplicación para investigar que enfermedad tien
 
    echo El entorno está listo. Para desactivarlo, usa el comando "deactivate".
    exit
+   ```
+   3. Abre la cerpeta frontend
+   4. Una vez una vez adentro, instala las dependencias de VUE:
+   ```bash
+   npm install
    ```
 
 #### Ejecución del proyecto
