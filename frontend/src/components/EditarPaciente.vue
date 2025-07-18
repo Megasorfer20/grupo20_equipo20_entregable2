@@ -13,8 +13,13 @@
             <h3>Modifica los campos que quieras editar</h3>
             <form @submit.prevent="actualizarPaciente">
                 <div>
-                    <label>Nombre completo:</label>
-                    <input v-model="paciente.nombre_completo" type="text" required />
+                    <label>Nombres :</label>
+                    <input v-model="paciente.nombre_completo" type="text" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$" maxlength="100" />
+                </div>
+
+                <div>
+                    <label>Apellidos:</label>
+                    <input v-model="paciente.apellidos" type="text" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$" maxlength="100" />
                 </div>
 
                 <div>
@@ -28,7 +33,8 @@
                         <option disabled value="">Selecciona un género</option>
                         <option>Masculino</option>
                         <option>Femenino</option>
-                        <option>Otro</option>
+                        <option>No binario</option>
+                        <option>Prefiero no decirlo</option>
                     </select>
                 </div>
 
@@ -39,7 +45,7 @@
 
                 <div>
                     <label>Celular de contacto:</label>
-                    <input v-model="paciente.celular_contacto" type="number" required />
+                    <input v-model="paciente.celular_contacto" type="text" required pattern="^[0-9]{10}$" maxlength="10" inputmode="numeric" />
                 </div>
 
                 <div>
@@ -61,6 +67,9 @@ const emit = defineEmits(['volver'])
 const busqueda = ref('')
 const paciente = ref(null)
 const pacienteEncontrado = ref(false)
+
+const esValidoNumero = (numero) => /^[0-9]{10}$/.test(numero)
+const esNombreValido = (nombre) => /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nombre)
 
 const buscarPaciente = async () => {
     if (!busqueda.value) {
@@ -84,6 +93,16 @@ const actualizarPaciente = async () => {
     const campos = Object.values(paciente.value)
     if (campos.some((v) => v === '' || v === null)) {
         alert('Por favor, llena todos los campos.')
+        return
+    }
+
+    if (!esValidoNumero(paciente.value.celular_contacto)) {
+        alert('Número de celular deben tener exactamente 10 dígitos.')
+        return
+    }
+
+    if (!esNombreValido(paciente.value.nombre_completo)) {
+        alert('El nombre solo debe contener letras y espacios.')
         return
     }
 

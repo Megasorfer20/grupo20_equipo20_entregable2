@@ -90,7 +90,7 @@ const enviarTratamiento = async () => {
         paciente_id: pacienteStore.paciente.id,
         medicamentos: medicamentos.value.map((m) => m.nombre),
         dosis_medicamentos: medicamentos.value.map((m) => m.dosis),
-        fecha_registro: new Date().toISOString().split('T')[0]
+        fecha_registro: new Date().toISOString()
     }
 
     await window.pywebview?.ready

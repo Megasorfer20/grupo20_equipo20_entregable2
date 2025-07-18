@@ -6,18 +6,19 @@ from datetime import datetime
 from database.database import create_database, cerrar_db, session
 from database.models import Pacientes, Tratamientos, Alergias, Sintomas, Enfermedades, PacientesEnfermedades
 from difflib import SequenceMatcher
-from datetime import datetime
+from datetime import datetime, timezone
 
 class API:
     def serialize_paciente(self, paciente):
         return {
             "id": paciente.id,
             "nombre_completo": paciente.nombre_completo,
+            "apellidos": paciente.apellidos,
             "fecha_nacimiento": paciente.fecha_nacimiento.strftime('%Y-%m-%d'),
             "genero": paciente.genero,
             "numero_identificacion": paciente.numero_identificacion,
             "celular_contacto": paciente.celular_contacto,
-            "fecha_registro": paciente.fecha_registro.strftime('%Y-%m-%d')
+            "fecha_registro": paciente.fecha_registro.strftime('%Y-%m-%d %H:%M:%S'),
         }
         
     def buscar_paciente(self, query):
@@ -26,22 +27,41 @@ class API:
             if paciente:
                 return self.serialize_paciente(paciente)
 
-            nombres = session.query(Pacientes.nombre_completo).all()
-            nombres = [n[0] for n in nombres]
+            todos = session.query(Pacientes.id, Pacientes.nombre_completo, Pacientes.apellidos).all()
 
-            matches = get_close_matches(query, nombres, n=1, cutoff=0.6)
+            nombres_completos = [
+                (p[0], f"{p[1]} {p[2]}".strip()) for p in todos
+            ]
+
+            # Buscar coincidencia aproximada
+            lista_nombres = [nombre for _, nombre in nombres_completos]
+            matches = get_close_matches(query, lista_nombres, n=1, cutoff=0.6)
+
             if matches:
-                paciente = session.query(Pacientes).filter_by(nombre_completo=matches[0]).first()
-                return self.serialize_paciente(paciente)
+                nombre_coincidente = matches[0]
+                # Encontrar el id correspondiente
+                id_coincidente = next((pid for pid, nombre in nombres_completos if nombre == nombre_coincidente), None)
+                if id_coincidente:
+                    paciente = session.query(Pacientes).get(id_coincidente)
+                    return self.serialize_paciente(paciente)
 
-            return {} 
+            return {}
         except Exception as e:
             return {"error": str(e)}
         
     def add_paciente(self, paciente):
         try:
             paciente['fecha_nacimiento'] = datetime.strptime(paciente['fecha_nacimiento'], '%Y-%m-%d').date()
-            paciente['fecha_registro'] = datetime.strptime(paciente['fecha_registro'], '%Y-%m-%d').date()
+            fr = paciente['fecha_registro']
+            if isinstance(fr, str):
+                fr = fr.replace('Z', '+00:00')
+                paciente['fecha_registro'] = datetime.fromisoformat(fr)
+            else:
+                paciente['fecha_registro'] = datetime.now(timezone.utc)
+
+            paciente['numero_identificacion'] = int(paciente['numero_identificacion'])
+            paciente['celular_contacto'] = int(paciente['celular_contacto'])
+            
             nuevo_paciente = Pacientes(**paciente)
             session.add(nuevo_paciente)
             session.commit()
@@ -61,7 +81,7 @@ class API:
             paciente.nombre_completo = paciente_actualizado['nombre_completo']
             paciente.fecha_nacimiento = datetime.strptime(paciente_actualizado['fecha_nacimiento'], '%Y-%m-%d').date()
             paciente.genero = paciente_actualizado['genero']
-            paciente.celular_contacto = paciente_actualizado['celular_contacto']
+            paciente.celular_contacto = int(paciente_actualizado['celular_contacto'])
 
             session.commit()
             return "Paciente actualizado correctamente"
@@ -71,7 +91,12 @@ class API:
         
     def add_tratamiento(self, datos):
         try:
-            datos['fecha_registro'] = datetime.strptime(datos['fecha_registro'], '%Y-%m-%d').date()
+            fr = datos['fecha_registro']
+            if isinstance(fr, str):
+                fr = fr.replace('Z', '+00:00')
+                datos['fecha_registro'] = datetime.fromisoformat(fr)
+            else:
+                datos['fecha_registro'] = datetime.now(timezone.utc)
             nuevo = Tratamientos(**datos)
             session.add(nuevo)
             session.commit()
@@ -82,7 +107,12 @@ class API:
     
     def add_alergia(self, datos):
         try:
-            datos['fecha_registro'] = datetime.strptime(datos['fecha_registro'], '%Y-%m-%d').date()
+            fr = datos['fecha_registro']
+            if isinstance(fr, str):
+                fr = fr.replace('Z', '+00:00')
+                datos['fecha_registro'] = datetime.fromisoformat(fr)
+            else:
+                datos['fecha_registro'] = datetime.now(timezone.utc)
             nueva_alergia = Alergias(**datos)
             session.add(nueva_alergia)
             session.commit()
@@ -101,7 +131,12 @@ class API:
     def registrar_enfermedad_paciente(self, datos):
         try:
             sintomas_paciente = datos.get("sintomas", [])
-            fecha_registro = datetime.strptime(datos['fecha_registro'], '%Y-%m-%d').date()
+            fr = datos['fecha_registro']
+            if isinstance(fr, str):
+                fr = fr.replace('Z', '+00:00')
+                datos['fecha_registro'] = datetime.fromisoformat(fr)
+            else:
+                datos['fecha_registro'] = datetime.now(timezone.utc)
             paciente_id = datos['paciente_id']
 
             enfermedades = session.query(Enfermedades).all()
@@ -129,7 +164,7 @@ class API:
                 paciente_id=paciente_id,
                 enfermedad_id=enfermedad_id,
                 sintomas=sintomas_paciente,
-                fecha_registro=fecha_registro
+                fecha_registro=datos['fecha_registro']
             )
 
             session.add(nueva_relacion)
@@ -167,8 +202,23 @@ class API:
             "dosis_medicamentos": t.dosis_medicamentos,
             "fecha_registro": t.fecha_registro.isoformat()
         } for t in tratamientos]
+        
+    def listar_pacientes(self):
+        pacientes = session.query(Pacientes).all()
+        return [self.serialize_paciente(p) for p in pacientes]
 
+    def deletar_paciente(self, paciente_id):
+        try:
+            paciente = session.query(Pacientes).get(paciente_id)
+            if not paciente:
+                return "Paciente no encontrado"
 
+            session.delete(paciente)
+            session.commit()
+            return "Paciente eliminado correctamente"
+        except Exception as e:
+            session.rollback()
+            return f"Error al eliminar paciente: {str(e)}"
         
     
 
@@ -181,14 +231,14 @@ def main():
     
     api = API()
 
-    webview.create_window('Gestor de pacientes', index_file, js_api=api)
-    # webview.create_window("Dev", "http://localhost:5173", js_api=api)
+    # webview.create_window('Gestor de pacientes', index_file, js_api=api)
+    webview.create_window("Dev", "http://localhost:5173", js_api=api)
 
     try:
         create_database()
         
-        # webview.start(debug=True, http_server=True)
-        webview.start( http_server=True)
+        webview.start(debug=True, http_server=True)
+        # webview.start( http_server=True)
     finally:
         print("Cerrando la aplicación...")
         cerrar_db()

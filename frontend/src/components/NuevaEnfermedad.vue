@@ -71,13 +71,12 @@ const enviarEnfermedad = async () => {
     const datos = {
         paciente_id: pacienteStore.paciente.id,
         sintomas: sintomasSeleccionados.value,
-        fecha_registro: new Date().toISOString().split('T')[0]
+        fecha_registro: new Date().toISOString()
     }
 
     await window.pywebview?.ready
     const respuesta = await window.pywebview.api.registrar_enfermedad_paciente(datos)
 
-    // Actualizar enfermedades del store
     pacienteStore.enfermedades = await window.pywebview.api.obtener_enfermedades_paciente(pacienteStore.paciente.id)
 
     alert(respuesta)

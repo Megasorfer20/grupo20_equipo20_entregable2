@@ -98,7 +98,7 @@ const enviarAlergia = async () => {
         paciente_id: pacienteStore.paciente.id,
         alergeno: alergia.value.alergeno.trim(),
         sintomas: sintomasNombres,
-        fecha_registro: new Date().toISOString().split('T')[0]
+        fecha_registro: new Date().toISOString()
     }
 
     await window.pywebview?.ready

@@ -11,6 +11,8 @@
         <div v-else>
             <h1>Información del paciente</h1>
             <p><strong>Nombre:</strong> {{ pacienteStore.paciente.nombre_completo }}</p>
+            <p><strong>Apellido:</strong> {{ pacienteStore.paciente.apellidos }}</p>
+            <p><strong>Edad:</strong> {{ calcularEdad(pacienteStore.paciente.fecha_nacimiento) }}</p>
             <p><strong>Fecha nacimiento:</strong> {{ pacienteStore.paciente.fecha_nacimiento }}</p>
             <p><strong>Género:</strong> {{ pacienteStore.paciente.genero }}</p>
             <p><strong>Identificación:</strong> {{ pacienteStore.paciente.numero_identificacion }}</p>
@@ -29,6 +31,7 @@
                 <button @click="$emit('nuevaEnfermedadRoute')">Añadir enfermedad</button>
                 <button @click="$emit('nuevaAlergiaRoute')">Añadir alergia</button>
                 <button @click="$emit('nuevTratamientoRoute')">Añadir tratamiento</button>
+                <button @click="eliminarPaciente">Eliminar paciente</button>
             </div>
         </div>
 
@@ -106,6 +109,24 @@ const emit = defineEmits(['volver', 'nuevaEnfermedadRoute', 'nuevaAlergiaRoute',
 const busqueda = ref('')
 const modal = ref(null)
 
+const eliminarPaciente = async () => {
+    if (!pacienteStore.paciente) {
+        alert('No hay paciente seleccionado para eliminar.')
+        return
+    }
+
+    const confirmacion = confirm('¿Estás seguro de que deseas eliminar este paciente? Esta acción no se puede deshacer.')
+    if (confirmacion) {
+        await window.pywebview?.ready
+        await window.pywebview.api.deletar_paciente(pacienteStore.paciente.id)
+        pacienteStore.paciente = null
+        pacienteStore.enfermedades = []
+        pacienteStore.alergias = []
+        pacienteStore.tratamientos = []
+        emit('volver')
+    }
+}
+
 const buscarPaciente = async () => {
     if (!busqueda.value) {
         alert('Por favor, ingresa nombre o número de documento.')
@@ -135,6 +156,18 @@ const mostrarModal = (tipo) => {
 const cerrarModal = () => {
     modal.value = null
 }
+
+const calcularEdad = (fechaNacimiento) => {
+    const hoy = new Date()
+    const nacimiento = new Date(fechaNacimiento)
+    let edad = hoy.getFullYear() - nacimiento.getFullYear()
+    const m = hoy.getMonth() - nacimiento.getMonth()
+    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--
+    }
+    return edad
+}
+
 </script>
 
 <style scoped>

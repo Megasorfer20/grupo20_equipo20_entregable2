@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, DateTime
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship
 
@@ -26,16 +26,17 @@ class Pacientes(Base):
 
     id = Column(Integer, primary_key=True)
     nombre_completo = Column(String)
+    apellidos = Column(String)
     fecha_nacimiento = Column(Date)
     genero = Column(String)
     numero_identificacion = Column(Integer)
     celular_contacto = Column(Integer)
-    fecha_registro = Column(Date)
+    fecha_registro = Column(DateTime)
     
     # Relaciones
-    enfermedades = relationship("PacientesEnfermedades", back_populates="paciente")
-    tratamientos = relationship("Tratamientos", back_populates="paciente")
-    alergias = relationship("Alergias", back_populates="paciente")
+    enfermedades = relationship("PacientesEnfermedades", back_populates="paciente", cascade="all, delete-orphan")
+    tratamientos = relationship("Tratamientos", back_populates="paciente", cascade="all, delete-orphan")
+    alergias = relationship("Alergias", back_populates="paciente", cascade="all, delete-orphan")
     
 class Enfermedades(Base):
     __tablename__ = 'enfermedades'
@@ -55,7 +56,7 @@ class PacientesEnfermedades(Base):
     paciente_id = Column(Integer, ForeignKey('pacientes.id'))
     enfermedad_id = Column(Integer, ForeignKey('enfermedades.id'), nullable=True)
     sintomas = Column(JSONEncodedList)
-    fecha_registro = Column(Date)
+    fecha_registro = Column(DateTime)
     
     # Relaciones reversas
     paciente = relationship("Pacientes", back_populates="enfermedades")
@@ -74,7 +75,7 @@ class Tratamientos(Base):
     paciente_id = Column(Integer, ForeignKey('pacientes.id'))
     medicamentos = Column(JSONEncodedList)
     dosis_medicamentos = Column(JSONEncodedList)
-    fecha_registro = Column(Date)
+    fecha_registro = Column(DateTime)
     
     paciente = relationship("Pacientes", back_populates="tratamientos")
 
@@ -85,7 +86,7 @@ class Alergias(Base):
     paciente_id = Column(Integer, ForeignKey('pacientes.id'))
     alergeno = Column(String)
     sintomas = Column(JSONEncodedList)
-    fecha_registro = Column(Date)
+    fecha_registro = Column(DateTime)
     
     paciente = relationship("Pacientes", back_populates="alergias")
 

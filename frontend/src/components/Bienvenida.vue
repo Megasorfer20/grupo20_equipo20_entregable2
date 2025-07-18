@@ -7,6 +7,7 @@
             <button @click="$emit('nuevoPacienteRoute')">Añadir paciente</button>
             <button @click="$emit('editarPacienteRoute')">Actualizar paciente</button>
             <button @click="$emit('consultarPacienteRoute')">Consultar paciente</button>
+            <button @click="$emit('listarPacientes')">Listar pacientes</button>
         </div>
     </section>
 </template>
