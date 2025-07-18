@@ -231,14 +231,14 @@ def main():
     
     api = API()
 
-    # webview.create_window('Gestor de pacientes', index_file, js_api=api)
-    webview.create_window("Dev", "http://localhost:5173", js_api=api)
+    webview.create_window('Gestor de pacientes', index_file, js_api=api)
+    # webview.create_window("Dev", "http://localhost:5173", js_api=api)
 
     try:
         create_database()
         
-        webview.start(debug=True, http_server=True)
-        # webview.start( http_server=True)
+        # webview.start(debug=True, http_server=True)
+        webview.start( http_server=True)
     finally:
         print("Cerrando la aplicación...")
         cerrar_db()
